@@ -30,9 +30,16 @@ export const allTimezones = groupedOptions.reduce(
 );
 
 const findBrowserTimezone = () => {
-  const browserTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+  try {
+    const browserTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+    const foundTimezone = allTimezones.find((timezone) => timezone.utc.includes(browserTimezone));
+    return foundTimezone;
+  } catch (error) {
+    console.error("Could not determine browser timezone due to an error. Falling back to default.", error);
+  }
 
-  return allTimezones.find((timezone) => timezone.utc.includes(browserTimezone));
+  // Fallback to a default timezone object. "Etc/GMT" is a good proxy for UTC.
+  return allTimezones.find(tz => tz.utc.includes("Etc/GMT"));
 };
 
 export const DEFAULT_VALUE = findBrowserTimezone() || allTimezones[0];
@@ -56,9 +63,8 @@ export const createGroupedOptionButton = (
             <Button
               id={valueToId(timezone.keywords)}
               onClick={handleSelect}
-              customClass={`px-2 hover:bg-slate-100 ${
-                (selectedValue.keywords === timezone.keywords) ? "bg-blue-300" : ""
-              }`}
+              customClass={`px-2 hover:bg-slate-100 ${(selectedValue.keywords === timezone.keywords) ? "bg-blue-300" : ""
+                }`}
               key={index}
               timezone={timezone}
               is24H={is24H}
